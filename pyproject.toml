@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["tts_server*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[project]
+name = "tts-server"
+version = "0.1.0"
+description = "FastAPI TTS application server wrapping vLLM + KaniTTS-2"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "numpy",
+    "scipy",
+    "safetensors",
+    "huggingface_hub",
+    "einops",
+    # vLLM 0.16.0+ (V1 engine — V0 was removed in v0.11.0)
+    # Plugin system (vllm.general_plugins entry point) handles model registration in all processes
+    "vllm>=0.16.0",
+    "kanitts2-vllm",
+]

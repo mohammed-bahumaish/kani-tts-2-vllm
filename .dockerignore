@@ -1,0 +1,17 @@
+__pycache__
+*.pyc
+*.pyo
+.git
+.gitignore
+.venv
+venv
+.pytest_cache
+.ruff_cache
+.mypy_cache
+tests
+stress_test.py
+make_voice.py
+*.wav
+*.pcm
+._*
+.DS_Store

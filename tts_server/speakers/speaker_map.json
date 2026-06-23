@@ -1,0 +1,20 @@
+{   
+    "Robert (en)": "./speakers/robert_en.pt",
+    "Linda (en)": "./speakers/linda_en.pt",
+    "John (en)": "./speakers/john_en.pt",
+    "Mila (en)": "./speakers/mila_en.pt",
+    "David (en)": "./speakers/david_en.pt",
+    "Joseph (en)": "./speakers/joseph_en.pt",
+    "Arjun (en)": "./speakers/arjun_en.pt",
+    "Kore (en)": "./speakers/speaker_1.pt",
+    "Puck (en)": "./speakers/speaker_2.pt",
+    "Andrew (en)": "./speakers/speaker_3.pt",
+  
+    "Aisulu (ky)": "./speakers/aisulu_ky.pt",
+    "Adilet (ky)": "./speakers/adilet_ky.pt",
+    "Bermet (ky)": "./speakers/bermet_ky.pt",
+    "Bakyt (ky)": "./speakers/bakyt_ky.pt",
+  
+    "Ash (es)": "./speakers/speaker_6.pt",
+    "Nova (es)": "./speakers/speaker_7.pt"
+}

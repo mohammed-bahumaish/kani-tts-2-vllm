@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kanitts2-vllm"
+version = "0.1.0"
+description = "vLLM out-of-tree plugin for KaniTTS-2 (modified LFM2)"
+requires-python = ">=3.10"
+dependencies = ["vllm>=0.16.0"]
+
+[project.entry-points."vllm.general_plugins"]
+kanitts2 = "kanitts2_vllm:register"
