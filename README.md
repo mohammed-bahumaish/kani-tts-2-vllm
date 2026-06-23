@@ -19,23 +19,26 @@ frame-level RoPE positions, learnable per-layer RoPE, and speaker-embedding proj
 
 ## Quick start (Docker)
 
-This is the recommended path. There is **no prebuilt image** — you build your own. Both models
-(LM + codec) are public on the HF Hub and get baked into the image at build time, so the running
-container needs no network and no tokens.
+A **prebuilt image** is published on Docker Hub as
+[`mohammedbahumaish/kanitts2-vllm`](https://hub.docker.com/r/mohammedbahumaish/kanitts2-vllm) — or
+build your own from the [`Dockerfile`](Dockerfile). Both models (LM + codec) are public on the HF
+Hub and baked into the image at build time, so the running container needs no network and no tokens.
 
 ```bash
-# 1. Build (context is this directory). Pick a base-image CUDA tag that matches your GPU —
-#    see "Choosing a base image" below.
-docker build -t kanitts2-server .
+# Option A — pull the prebuilt image (CUDA 13.0 base; the host needs an NVIDIA driver ≥ 580):
+docker run --gpus all -p 8000:8000 mohammedbahumaish/kanitts2-vllm:latest
 
-# 2. Run
+# Option B — build your own (pick a base-image CUDA tag for your GPU; see "Choosing a base image"):
+docker build -t kanitts2-server .
 docker run --gpus all -p 8000:8000 kanitts2-server
 
-# 3. Generate (after the logs print "Ready")
+# Then generate (after the logs print "Ready"):
 curl -X POST http://localhost:8000/v1/audio/speech \
   -H 'Content-Type: application/json' \
-  -d '{"input": "Hello from KaniTTS two."}' --output hello.wav
+  -d '{"input": "Hello from KaniTTS two.", "voice": "david_en"}' --output hello.wav
 ```
+
+> The prebuilt image is ~10 GB compressed (≈33 GB unpacked), so the first pull takes a few minutes.
 
 `GET /health` reports readiness:
 
@@ -55,6 +58,44 @@ The Dockerfile builds on `vastai/vllm`, which ships vLLM + PyTorch + CUDA prebui
 
 Edit the `FROM` line in the [`Dockerfile`](Dockerfile) to switch. To bake models from a gated/private
 HF mirror, pass `--build-arg HUGGINGFACE_TOKEN=hf_...`.
+
+---
+
+## Deploy on vast.ai
+
+One-shot GPU deploy of the prebuilt image with the [vast.ai CLI](https://docs.vast.ai/cli/get-started)
+(`pip install vastai && vastai set api-key <KEY>`). The image is built on a **CUDA 13.0** base, so rent
+a host with an NVIDIA driver ≥ 580 — filter offers with `cuda_vers>=13.0`. 24 GB VRAM (RTX 3090/4090) is
+plenty.
+
+```bash
+# 1. Find a single-GPU CUDA-13 host with room for the image, cheapest first.
+vastai search offers \
+  'reliability>0.97 num_gpus=1 cuda_vers>=13.0 gpu_ram>=24 disk_space>=60 rentable=True' -o dph+
+
+# 2. Rent it (replace OFFER_ID). Maps :8000 and auto-starts the server on boot.
+vastai create instance OFFER_ID \
+  --image mohammedbahumaish/kanitts2-vllm:latest \
+  --disk 60 \
+  --env '-p 8000:8000' \
+  --onstart-cmd 'python -m tts_server.server'
+
+# 3. Wait until it's ready (first boot pulls ~10 GB → allow 5–15 min). Watch with:
+vastai show instance INSTANCE_ID          # Status: loading → running
+vastai logs INSTANCE_ID                    # server logs; ready when you see "Uvicorn running"
+
+# 4. Resolve the public host:port mapped to the container's :8000.
+vastai show instance INSTANCE_ID --raw \
+  | python3 -c 'import sys,json;d=json.load(sys.stdin,strict=False);p=d["ports"]["8000/tcp"][0];print(f"{d[\"public_ipaddr\"]}:{p[\"HostPort\"]}")'
+
+# 5. Generate (use the HOST:PORT from step 4).
+curl http://HOST:PORT/health
+curl -X POST http://HOST:PORT/v1/audio/speech \
+  -H 'Content-Type: application/json' \
+  -d '{"input": "Hello from KaniTTS two.", "voice": "david_en"}' --output hello.wav
+```
+
+Destroy it when you're done so it stops billing: `vastai destroy instance INSTANCE_ID`.
 
 ---
 
